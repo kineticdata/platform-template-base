@@ -48,20 +48,22 @@
 #   }
 # }
 
-raise "Invalid JSON argument string passed to template install script" if ARGV.empty?
-vars = begin
-  JSON.parse ARGV[0]
-rescue
-  raise "Invalid JSON argument string passed to template install script"
-end
-
-
 require 'logger'
+require 'json'
 
 template_name = "platform-template-base"
 
 logger = Logger.new(STDERR)
 logger.level = Logger::INFO
+
+
+raise "Missing JSON argument string passed to template repair script" if ARGV.empty?
+begin
+  vars = JSON.parse(ARGV[0])
+rescue => e
+  raise "Template #{template_name} repair error: #{e.inspect}"
+end
+
 
 # determine the directory paths
 platform_template_path = File.dirname(File.expand_path(__FILE__))
