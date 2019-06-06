@@ -13,6 +13,16 @@
 #     "service_user_username" => "service_user_username",
 #     "service_user_password" => "secret"
 #   },
+#   "core" => {
+#     "api" => "http://localhost:8080/kinetic/app/api/v1",
+#     "server" => "http://localhost:8080/kinetic",
+#     "space_slug" => "foo",
+#     "space_name" => "Foo",
+#     "username" => "admin",
+#     "password" => "admin",
+#     "service_user_username" => "service_user_username",
+#     "service_user_password" => "secret"
+#   },
 #   "discussions" => {
 #     "api" => "http://localhost:8080/app/discussions/api/v1",
 #     "server" => "http://localhost:8080/app/discussions",
@@ -25,16 +35,6 @@
 #     "space_slug" => "foo",
 #     "username" => "admin",
 #     "password" => "admin"
-#   },
-#   "request_ce" => {
-#     "api" => "http://localhost:8080/kinetic/app/api/v1",
-#     "server" => "http://localhost:8080/kinetic",
-#     "space_slug" => "foo",
-#     "space_name" => "Foo",
-#     "username" => "admin",
-#     "password" => "admin",
-#     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
 #   },
 #   "task" => {
 #     "api" => "http://localhost:8080/kinetic-task/app/api/v1",
@@ -67,7 +67,7 @@ end
 
 # determine the directory paths
 platform_template_path = File.dirname(File.expand_path(__FILE__))
-core_path = File.join(platform_template_path, "ce")
+core_path = File.join(platform_template_path, "core")
 task_path = File.join(platform_template_path, "task")
 
 
@@ -76,10 +76,10 @@ task_path = File.join(platform_template_path, "task")
 # ------------------------------------------------------------------------------
 
 def configure_space(space, options={})
-  request_ce = options["request_ce"]
+  core = options["core"]
   # Update the space slug and space name
-  space["slug"] = request_ce["space_slug"]
-  space["name"] = request_ce["space_name"]
+  space["slug"] = core["space_slug"]
+  space["name"] = core["space_name"]
   space
 end
 
@@ -95,17 +95,17 @@ require 'kinetic_sdk'
 
 
 # ------------------------------------------------------------------------------
-# request
+# core
 # ------------------------------------------------------------------------------
 
 space_config = JSON.parse(File.read("#{core_path}/space.json"))
 space = configure_space(space_config, vars)
 
 space_sdk = KineticSdk::RequestCe.new({
-  space_server_url: vars["request_ce"]["server"],
+  space_server_url: vars["core"]["server"],
   space_slug: space["slug"],
-  username: vars["request_ce"]["username"],
-  password: vars["request_ce"]["password"]
+  username: vars["core"]["username"],
+  password: vars["core"]["password"]
 })
 
 logger.info "Repairing the core components for the \"#{template_name}\" template."
