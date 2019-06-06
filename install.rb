@@ -101,7 +101,7 @@ require 'kinetic_sdk'
 space_config = JSON.parse(File.read("#{core_path}/space.json"))
 space = configure_space(space_config, vars)
 
-space_sdk = KineticSdk::RequestCe.new({
+space_sdk = KineticSdk::Core.new({
   space_server_url: vars["core"]["server"],
   space_slug: space["slug"],
   username: vars["core"]["username"],
