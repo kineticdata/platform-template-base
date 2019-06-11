@@ -110,64 +110,64 @@ require 'kinetic_sdk'
 logger.info "Removing files and folders from the existing \"#{template_name}\" template."
 FileUtils.rm_rf Dir.glob("#{core_path}/*")
 
-# logger.info "Setting up the Core SDK"
-# space_sdk = KineticSdk::Core.new({
-#   space_server_url: vars["core"]["server"],
-#   space_slug: vars["core"]["space_slug"],
-#   username: vars["core"]["username"],
-#   password: vars["core"]["password"],
-#   options: {
-#     export_directory: "#{core_path}",
-#   }
-# })
+logger.info "Setting up the Core SDK"
+space_sdk = KineticSdk::Core.new({
+  space_server_url: vars["core"]["server"],
+  space_slug: vars["core"]["space_slug"],
+  username: vars["core"]["username"],
+  password: vars["core"]["password"],
+  options: {
+    export_directory: "#{core_path}",
+  }
+})
 
-# # Fetch Export from Core and write to files
-# logger.info "Exporting the core components for the \"#{template_name}\" template."
-# logger.info "  exporting with api: #{space_sdk.api_url}"
-# logger.info "   - exporting configuration data (Kapps,forms, etc)"
-# space_sdk.export_space
+# Fetch Export from Core and write to files
+logger.info "Exporting the core components for the \"#{template_name}\" template."
+logger.info "  exporting with api: #{space_sdk.api_url}"
+logger.info "   - exporting configuration data (Kapps,forms, etc)"
+space_sdk.export_space
 
-# # Export Submissions
-# logger.info "  - exporting and writing submission data"
-# SUBMISSIONS_TO_EXPORT.each do |item|
-#   is_datastore = item["datastore"] || false
-#   logger.info "    - #{is_datastore ? 'datastore' : 'kapp'} form #{item['formSlug']}"
-#   # Build directory to write files to
-#   submission_path = is_datastore ?
-#     "#{core_path}/space/datastore/forms/#{item['formSlug']}" :
-#     "#{core_path}/kapps/#{item['kappSlug']}/forms/#{item['formSlug']}"
+# Export Submissions
+logger.info "  - exporting and writing submission data"
+SUBMISSIONS_TO_EXPORT.each do |item|
+  is_datastore = item["datastore"] || false
+  logger.info "    - #{is_datastore ? 'datastore' : 'kapp'} form #{item['formSlug']}"
+  # Build directory to write files to
+  submission_path = is_datastore ?
+    "#{core_path}/space/datastore/forms/#{item['formSlug']}" :
+    "#{core_path}/kapps/#{item['kappSlug']}/forms/#{item['formSlug']}"
 
-#   # Create folder to write submission data to
-#   FileUtils.mkdir_p(submission_path, :mode => 0700)
+  # Create folder to write submission data to
+  FileUtils.mkdir_p(submission_path, :mode => 0700)
 
-#   # Build params to pass to the retrieve_form_submissions method
-#   params = {"include" => "values", "limit" => 1000, "direction" => "ASC"}
+  # Build params to pass to the retrieve_form_submissions method
+  params = {"include" => "values", "limit" => 1000, "direction" => "ASC"}
 
-#   # Open the submissions file in write mode
-#   file = File.open("#{submission_path}/submissions.ndjson", 'w');
+  # Open the submissions file in write mode
+  file = File.open("#{submission_path}/submissions.ndjson", 'w');
 
-#   # Ensure the file is empty
-#   file.truncate(0)
-#   response = nil
-#   begin
-#     # Get submissions
-#     response = is_datastore ?
-#       space_sdk.find_all_form_datastore_submissions(item['formSlug'], params).content :
-#       space_sdk.find_form_submissions(item['kappSlug'], item['formSlug'], params).content
-#     if response.has_key?("submissions")
-#       # Write each submission on its own line
-#       (response["submissions"] || []).each do |submission|
-#         # Append each submission (removing the submission unwanted attributes)
-#         file.puts(JSON.generate(submission.delete_if { |key, value| REMOVE_DATA_PROPERTIES.member?(key)}))
-#       end
-#     end
-#     params['pageToken'] = response['nextPageToken']
-#     # Get next page of submissions if there are more
-#   end while !response.nil? && !response['nextPageToken'].nil?
-#   # Close the submissions file
-#   file.close()
-# end
-# logger.info "  - submission data export complete"
+  # Ensure the file is empty
+  file.truncate(0)
+  response = nil
+  begin
+    # Get submissions
+    response = is_datastore ?
+      space_sdk.find_all_form_datastore_submissions(item['formSlug'], params).content :
+      space_sdk.find_form_submissions(item['kappSlug'], item['formSlug'], params).content
+    if response.has_key?("submissions")
+      # Write each submission on its own line
+      (response["submissions"] || []).each do |submission|
+        # Append each submission (removing the submission unwanted attributes)
+        file.puts(JSON.generate(submission.delete_if { |key, value| REMOVE_DATA_PROPERTIES.member?(key)}))
+      end
+    end
+    params['pageToken'] = response['nextPageToken']
+    # Get next page of submissions if there are more
+  end while !response.nil? && !response['nextPageToken'].nil?
+  # Close the submissions file
+  file.close()
+end
+logger.info "  - submission data export complete"
 
 # ------------------------------------------------------------------------------
 # task
