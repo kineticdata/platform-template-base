@@ -118,8 +118,8 @@ logger.info "Setting up the Core SDK"
 space_sdk = KineticSdk::Core.new({
   space_server_url: vars["core"]["server"],
   space_slug: vars["core"]["space_slug"],
-  username: vars["core"]["username"],
-  password: vars["core"]["password"],
+  username: vars["core"]["service_user_username"],
+  password: vars["core"]["service_user_password"],
   options: {
     export_directory: "#{core_path}",
   }
@@ -179,8 +179,8 @@ logger.info "  - submission data export complete"
 
 task_sdk = KineticSdk::Task.new({
   app_server_url: vars["task"]["server"],
-  username: vars["task"]["username"],
-  password: vars["task"]["password"],
+  username: vars["task"]["service_user_username"],
+  password: vars["task"]["service_user_password"],
   options: {
     export_directory: "#{task_path}",
   }

@@ -1,0 +1,25 @@
+{
+  "attributes": [
+    {
+      "name": "Assignable",
+      "values": [
+        "True"
+      ]
+    },
+    {
+      "name": "Icon",
+      "values": [
+        "fa-film"
+      ]
+    },
+    {
+      "name": "Discussion Id",
+      "values": [
+        "c0a632a0-7641-11e9-b9dd-dd805a7ce94c"
+      ]
+    }
+  ],
+  "description": "",
+  "name": "Marketing",
+  "slug": "7cb15e416d62919b1b40298324fbe30b"
+}

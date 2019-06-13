@@ -1,0 +1,25 @@
+{
+  "attributes": [
+    {
+      "name": "Assignable",
+      "values": [
+        "True"
+      ]
+    },
+    {
+      "name": "Icon",
+      "values": [
+        "fa-clipboard"
+      ]
+    },
+    {
+      "name": "Discussion Id",
+      "values": [
+        "be8e0100-7641-11e9-b9dd-dd805a7ce94c"
+      ]
+    }
+  ],
+  "description": "",
+  "name": "HR",
+  "slug": "fd4c638da5f85d025963f99fe90b1b1a"
+}

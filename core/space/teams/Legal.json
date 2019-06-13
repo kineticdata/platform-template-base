@@ -1,0 +1,25 @@
+{
+  "attributes": [
+    {
+      "name": "Assignable",
+      "values": [
+        "True"
+      ]
+    },
+    {
+      "name": "Icon",
+      "values": [
+        "fa-gavel"
+      ]
+    },
+    {
+      "name": "Discussion Id",
+      "values": [
+        "bf786100-7641-11e9-b9dd-dd805a7ce94c"
+      ]
+    }
+  ],
+  "description": "",
+  "name": "Legal",
+  "slug": "a10a9bcd450087de1ce1f80b35f44883"
+}

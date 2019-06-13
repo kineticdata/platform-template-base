@@ -1,0 +1,25 @@
+{
+  "attributes": [
+    {
+      "name": "Assignable",
+      "values": [
+        "True"
+      ]
+    },
+    {
+      "name": "Icon",
+      "values": [
+        "fa-money"
+      ]
+    },
+    {
+      "name": "Discussion Id",
+      "values": [
+        "bf2a6810-7641-11e9-b9dd-dd805a7ce94c"
+      ]
+    }
+  ],
+  "description": "",
+  "name": "Finance",
+  "slug": "c482980d384a9d0e7bc39e1140270870"
+}

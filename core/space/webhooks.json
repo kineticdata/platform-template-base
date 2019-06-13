@@ -1,0 +1,222 @@
+[
+  {
+    "authStrategy": {
+      "type": "Signature",
+      "properties": [
+        {
+          "name": "Key",
+          "value": "kinops-request-ce"
+        },
+        {
+          "name": "Secret",
+          "sensitive": "true"
+        }
+      ]
+    },
+    "event": "Invitation Created",
+    "filter": "",
+    "name": "Discussion Invitation Created",
+    "type": "Discussion",
+    "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/Kinetic%20Discussions/Discussion%20%3E%20Invitation/Created"
+  },
+  {
+    "authStrategy": {
+      "type": "Signature",
+      "properties": [
+        {
+          "name": "Key",
+          "value": "kinops-request-ce"
+        },
+        {
+          "name": "Secret",
+          "sensitive": "true"
+        }
+      ]
+    },
+    "event": "Invitation Updated",
+    "filter": "",
+    "name": "Discussion Invitation Updated",
+    "type": "Discussion",
+    "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/Kinetic%20Discussions/Discussion%20%3E%20Invitation/Created"
+  },
+  {
+    "authStrategy": {
+      "type": "Signature",
+      "properties": [
+        {
+          "name": "Key",
+          "value": "kinops-request-ce"
+        },
+        {
+          "name": "Secret",
+          "sensitive": "true"
+        }
+      ]
+    },
+    "event": "Notification",
+    "filter": "",
+    "name": "Discussion Notification Created",
+    "type": "Discussion",
+    "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/Kinetic%20Discussions/Discussion%20%3E%20Notification/Created"
+  },
+  {
+    "authStrategy": {
+      "type": "Signature",
+      "properties": [
+        {
+          "name": "Key",
+          "value": "kinops-request-ce"
+        },
+        {
+          "name": "Secret",
+          "sensitive": "true"
+        }
+      ]
+    },
+    "event": "Membership Change",
+    "filter": "team('name') === 'Role::Employee'",
+    "name": "Employee Membership Change",
+    "type": "Team",
+    "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/${space('attribute:Task Source Name')}/Teams/Employee%20Membership%20Change"
+  },
+  {
+    "authStrategy": {
+      "type": "Signature",
+      "properties": [
+        {
+          "name": "Key",
+          "value": "kinops-request-ce"
+        },
+        {
+          "name": "Secret",
+          "sensitive": "true"
+        }
+      ]
+    },
+    "event": "Created",
+    "filter": "form('slug')===\"robot-definitions\"",
+    "name": "Robot Created",
+    "type": "Datastore Submission",
+    "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/${space('attribute:Task Source Name')}/Datastore%20Submissions%20%3E%20${form('slug')}/Saved"
+  },
+  {
+    "authStrategy": {
+      "type": "Signature",
+      "properties": [
+        {
+          "name": "Key",
+          "value": "kinops-request-ce"
+        },
+        {
+          "name": "Secret",
+          "sensitive": "true"
+        }
+      ]
+    },
+    "event": "Updated",
+    "filter": "form('slug')===\"robot-definitions\"",
+    "name": "Robot Updated",
+    "type": "Datastore Submission",
+    "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/${space('attribute:Task Source Name')}/Datastore%20Submissions%20%3E%20${form('slug')}/Saved"
+  },
+  {
+    "authStrategy": {
+      "type": "Signature",
+      "properties": [
+        {
+          "name": "Key",
+          "value": "kinops-request-ce"
+        },
+        {
+          "name": "Secret",
+          "sensitive": "true"
+        }
+      ]
+    },
+    "event": "Created",
+    "filter": "",
+    "name": "Team Created",
+    "type": "Team",
+    "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/${space('attribute:Task Source Name')}/Teams/Created"
+  },
+  {
+    "authStrategy": {
+      "type": "Signature",
+      "properties": [
+        {
+          "name": "Key",
+          "value": "kinops-request-ce"
+        },
+        {
+          "name": "Secret",
+          "sensitive": "true"
+        }
+      ]
+    },
+    "event": "Deleted",
+    "filter": "",
+    "name": "Team Deleted",
+    "type": "Team",
+    "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/${space('attribute:Task Source Name')}/Teams/Deleted"
+  },
+  {
+    "authStrategy": {
+      "type": "Signature",
+      "properties": [
+        {
+          "name": "Key",
+          "value": "kinops-request-ce"
+        },
+        {
+          "name": "Secret",
+          "sensitive": "true"
+        }
+      ]
+    },
+    "event": "Membership Change",
+    "filter": "!team('name').startsWith('Role::')",
+    "name": "Team Membership Change",
+    "type": "Team",
+    "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/${space('attribute:Task Source Name')}/Teams/Team%20Membership%20Change"
+  },
+  {
+    "authStrategy": {
+      "type": "Signature",
+      "properties": [
+        {
+          "name": "Key",
+          "value": "kinops-request-ce"
+        },
+        {
+          "name": "Secret",
+          "sensitive": "true"
+        }
+      ]
+    },
+    "event": "Updated",
+    "filter": "",
+    "name": "Team Updated",
+    "type": "Team",
+    "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/${space('attribute:Task Source Name')}/Teams/Updated"
+  },
+  {
+    "authStrategy": {
+      "type": "Signature",
+      "properties": [
+        {
+          "name": "Key",
+          "value": "kinops-request-ce"
+        },
+        {
+          "name": "Secret",
+          "sensitive": "true"
+        }
+      ]
+    },
+    "event": "Created",
+    "filter": "user('invitedBy') === null",
+    "name": "User Created",
+    "type": "User",
+    "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/${space('attribute:Task Source Name')}/Users/Created"
+  }
+]

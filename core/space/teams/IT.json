@@ -1,0 +1,25 @@
+{
+  "attributes": [
+    {
+      "name": "Assignable",
+      "values": [
+        "True"
+      ]
+    },
+    {
+      "name": "Icon",
+      "values": [
+        "fa-desktop"
+      ]
+    },
+    {
+      "name": "Discussion Id",
+      "values": [
+        "beda9a60-7641-11e9-9801-6d5144ecd88f"
+      ]
+    }
+  ],
+  "description": "",
+  "name": "IT",
+  "slug": "cd32106bcb6de321930cf34574ea388c"
+}

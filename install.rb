@@ -88,11 +88,17 @@ require 'kinetic_sdk'
 # common
 # ------------------------------------------------------------------------------
 
+# access_key used for core to task service
+#   communications (webhooks, source)
+core_task_access_key = "kinops-request-ce"
+
 # pre-shared key for core webhooks to task
-task_access_key = {
-  "description" => "Kinetic Core",
-  "identifier" => "kinetic-core",
-  "secret" => KineticSdk::Utils::Random.simple
+task_access_keys = {
+  core_task_access_key => {
+    "identifier" => core_task_access_key,
+    "secret" => KineticSdk::Utils::Random.simple,
+    "description" => "Kinops Request CE",
+  }
 }
 
 # oAuth client for production bundle
@@ -113,6 +119,33 @@ oauth_client_dev_bundle = {
   "redirectUri" => "http://localhost:3000/#/OAuthCallback"
 }
 
+# task source configurations
+task_source_properties = {
+  "Kinetic Request CE" => {
+    "Space Slug" => nil,
+    "Web Server" => vars["core"]["server"],
+    "Proxy Username" => vars["core"]["service_user_username"],
+    "Proxy Password" => vars["core"]["service_user_password"]
+  },
+  "Kinetic Discussions" => {
+    "Space Slug" => nil,
+    "Web Server" => vars["core"]["server"],
+    "Proxy Username" => vars["core"]["service_user_username"],
+    "Proxy Password" => vars["core"]["service_user_password"]
+  }
+}
+
+# TODO - task handler info values
+task_handler_configurations = {
+  "smtp_server" => "mysmtp.com",
+  "smtp_port" => "25",
+  "smtp_tls" => "true",
+  "smtp_username" => "joe.blow",
+  "smtp_password" => "password",
+  "smtp_from_address" => "j@j.com",
+  "smtp_auth_type" => 'plain',
+}
+
 # ------------------------------------------------------------------------------
 # core
 # ------------------------------------------------------------------------------
@@ -123,7 +156,7 @@ space_sdk = KineticSdk::Core.new({
   space_server_url: vars["core"]["server"],
   space_slug: vars["core"]["space_slug"],
   username: vars["core"]["service_user_username"],
-  password: vars["core"]["password"],
+  password: vars["core"]["service_user_password"],
   options: {
     export_directory: "#{core_path}",
   }
@@ -188,8 +221,8 @@ space_sdk.find_webhooks_on_space.content['webhooks'].each do |webhook|
       "authStrategy" => {
         "type" => "Signature",
         "properties" => [
-          { "name" => "Key", "value" => task_access_key['identifier'] },
-          { "name" => "Secret", "value" => task_access_key['secret'] }
+          { "name" => "Key", "value" => task_access_keys[core_task_access_key]['identifier'] },
+          { "name" => "Secret", "value" => task_access_keys[core_task_access_key]['secret'] }
         ]
       }
     })
@@ -210,8 +243,8 @@ space_sdk.find_kapps.content['kapps'].each do |kapp|
         "authStrategy" => {
           "type" => "Signature",
           "properties" => [
-            { "name" => "Key", "value" => task_access_key['identifier'] },
-            { "name" => "Secret", "value" => task_access_key['secret'] }
+            { "name" => "Key", "value" => task_access_keys[core_task_access_key]['identifier'] },
+            { "name" => "Secret", "value" => task_access_keys[core_task_access_key]['secret'] }
           ]
         }
       })
@@ -253,21 +286,56 @@ task_sdk = KineticSdk::Task.new({
 logger.info "Installing the task components for the \"#{template_name}\" template."
 logger.info "  installing with api: #{task_sdk.api_url}"
 
-# import all data from the template and force overwrite
-task_sdk.import(true)
+# cleanup playground data
+task_sdk.delete_groups
+task_sdk.delete_users
+task_sdk.delete_policy_rules
 
-# handlers
+# import access keys
+Dir["#{task_path}/access-keys/*.json"].each do|file|
+  # parse the access_key file
+  required_access_key = JSON.parse(File.read(file))
+  # determine if access_key is already installed
+  not_installed = task_sdk.find_access_key(required_access_key["identifier"]).status == 404
+  # set access key secret
+  required_access_key["secret"] = task_access_keys[required_access_key["identifier"]]["secret"] || "SETME"
+  # add or update the access key
+  not_installed ?
+    task_sdk.add_access_key(required_access_key) :
+    task_sdk.update_access_key(required_access_key["identifier"], required_access_key)
+end
+
+# import data from template and force overwrite where necessary
+task_sdk.import_groups
+task_sdk.import_handlers(true)
+task_sdk.import_policy_rules
+task_sdk.import_routines(true)
+task_sdk.import_categories
+
+# import sources
+Dir["#{task_path}/sources/*.json"].each do|file|
+  # parse the source file
+  required_source = JSON.parse(File.read(file))
+  # determine if source is already installed
+  not_installed = task_sdk.find_source(required_source["name"]).status == 404
+  # set source properties
+  required_source["properties"] = task_source_properties[required_source["name"]] || {}
+  # add or update the source
+  not_installed ? task_sdk.add_source(required_source) : task_sdk.update_source(required_source)
+end
+
+# import trees and force overwrite
+task_sdk.import_trees(true)
+
+# configure handler info values
 task_sdk.find_handlers.content['handlers'].each do |handler|
   handler_definition_id = handler["definitionId"]
-
-  logger.info "Importing handler #{handler_file.path}"
-  task_sdk.import_handler(handler_file, true)
 
   if handler_definition_id.start_with?("kinetic_core_api_v1")
     logger.info "Updating handler #{handler_definition_id}"
     task_sdk.update_handler(handler_definition_id, {
       "properties" => {
-        "api_location" => space_sdk.api_url,
+        "api_location" => vars["core"]["server"],
         "api_username" => vars["core"]["service_user_username"],
         "api_password" => vars["core"]["service_user_password"]
       }
@@ -276,8 +344,8 @@ task_sdk.find_handlers.content['handlers'].each do |handler|
     logger.info "Updating handler #{handler_definition_id}"
     task_sdk.update_handler(handler_definition_id, {
       "properties" => {
-        "api_oauth_location" => "#{space_sdk.server}/app/oauth/token?grant_type=client_credentials&response_type=token",
-        "api_location" => "#{space_sdk.server}/app/discussions/api/v1",
+        "api_oauth_location" => "#{vars["core"]["server"]}/app/oauth/token?grant_type=client_credentials&response_type=token",
+        "api_location" => vars["discussions"]["api"],
         "api_username" => vars["core"]["service_user_username"],
         "api_password" => vars["core"]["service_user_password"]
       }
@@ -286,23 +354,58 @@ task_sdk.find_handlers.content['handlers'].each do |handler|
     logger.info "Updating handler #{handler_definition_id}"
     task_sdk.update_handler(handler_definition_id, {
       "properties" => {
-        "api_location" => task_sdk.api_v1_url,
+        "api_location" => vars["task"]["api"],
         "api_username" => vars["task"]["service_user_username"],
         "api_password" => vars["task"]["service_user_password"],
-        "api_access_key_identifier" => "foo",
-        "api_access_key_secret" => "bar"
+        "api_access_key_identifier" => task_access_keys[core_task_access_key]['identifier'],
+        "api_access_key_secret" => task_access_keys[core_task_access_key]['secret']
       }
     })
   elsif handler_definition_id.start_with?("kinetic_task_api_v2")
     logger.info "Updating handler #{handler_definition_id}"
     task_sdk.update_handler(handler_definition_id, {
       "properties" => {
-        "api_location" => task_sdk.api_url,
+        "api_location" => vars["task"]["api_v2"],
         "api_username" => vars["task"]["service_user_username"],
         "api_password" => vars["task"]["service_user_password"]
       }
     })
-    # there are likely more handlers that need to be configured
+  elsif handler_definition_id.start_with?("kinetic_request_ce_notification_template_send_v")
+    task_sdk.update_handler(handler_definition_id, {
+      "properties" => {
+        'smtp_server' => task_handler_configurations["smtp_server"],
+        'smtp_port' => task_handler_configurations["smtp_port"],
+        'smtp_tls' => task_handler_configurations["smtp_tls"],
+        'smtp_username' => task_handler_configurations["smtp_username"],
+        'smtp_password' => task_handler_configurations["smtp_password"],
+        'smtp_from_address' => task_handler_configurations["smtp_from_address"],
+        'smtp_auth_type' => task_handler_configurations["smtp_auth_type"],
+        'api_server' => vars["core"]["server"],
+        'api_username' => vars["core"]["service_user_username"],
+        'api_password' => vars["core"]["service_user_password"],
+        'space_slug' => nil,
+        'enable_debug_logging' => "No"
+      }
+    })
+  elsif handler_definition_id.start_with?("smtp_email_send")
+    task_sdk.update_handler(handler_definition_id, {
+      "properties" => {
+        "server" => task_handler_configurations["smtp_server"],
+        "port" => task_handler_configurations["smtp_port"],
+        "tls" => task_handler_configurations["smtp_tls"],
+        "username" => task_handler_configurations["smtp_username"],
+        "password" => task_handler_configurations["smtp_password"]
+      }
+    })
+  elsif handler_definition_id.start_with?("kinetic_request_ce")
+    task_sdk.update_handler(handler_definition_id, {
+      "properties" => {
+        'api_server' => vars["core"]["server"],
+        'api_username' => vars["core"]["service_user_username"],
+        'api_password' => vars["core"]["service_user_password"],
+        'space_slug' => nil,
+      }
+    })
   end
 end
 
