@@ -4,22 +4,23 @@
 #
 # {
 #   "bridgehub" => {
-#     "api" => "http://localhost:8080/kinetic-bridgehub/app/api/v1",
-#     "bridge_slug" => "ce-foo",
+#     "api" => "http://localhost:8080/kinetic-bridgehub/app/manage-api/v1",
 #     "server" => "http://localhost:8080/kinetic-bridgehub",
-#     "space_slug" => "foo",
-#     "username" => "admin",
-#     "password" => "admin",
-#     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "space_slug" => "acme",
+#     "bridges" => {
+#       "kinetic-core" => {
+#         "access_key_id" => "key",
+#         "access_key_secret" => "secret",
+#         "bridge_path" =>  "http://localhost:8080/kinetic-bridgehub/app/api/v1/bridges/#{space_slug}-core",
+#         "slug" =>  "kinetic-core"
+#       }
+#     },
 #   },
 #   "core" => {
 #     "api" => "http://localhost:8080/kinetic/app/api/v1",
 #     "server" => "http://localhost:8080/kinetic",
 #     "space_slug" => "foo",
 #     "space_name" => "Foo",
-#     "username" => "admin",
-#     "password" => "admin",
 #     "service_user_username" => "service_user_username",
 #     "service_user_password" => "secret"
 #   },
@@ -30,19 +31,22 @@
 #   },
 #   "filehub" => {
 #     "api" => "http://localhost:8080/kinetic-filehub/app/api/v1",
-#     "filestore_slug" => "ce-foo",
 #     "server" => "http://localhost:8080/kinetic-filehub",
 #     "space_slug" => "foo",
-#     "username" => "admin",
-#     "password" => "admin"
+#     "filestores" => {
+#       "kinetic-core" => {
+#         "access_key_id" => "key",
+#         "access_key_secret" => "secret",
+#         "filestore_path" =>  "http://localhost:8080/kinetic-bridgehub/bridges/kinetic-core",
+#         "slug" =>  "kinetic-core"
+#       }
+#     },
 #   },
 #   "task" => {
 #     "api" => "http://localhost:8080/kinetic-task/app/api/v1",
 #     "api_v2" => "http://localhost:8080/kinetic-task/app/api/v2",
 #     "server" => "http://localhost:8080/kinetic-task",
 #     "space_slug" => "foo",
-#     "username" => "admin",
-#     "password" => "admin",
 #     "service_user_username" => "service_user_username",
 #     "service_user_password" => "secret"
 #   }
@@ -185,7 +189,7 @@ task_sdk = KineticSdk::Task.new({
 logger.info "Exporting the task components for the \"#{template_name}\" template."
 logger.info "  exporting with api: #{task_sdk.api_url}"
 
-# Export all sources, trees, routines, handlers, groups, 
+# Export all sources, trees, routines, handlers, groups,
 # policy rules, categories, and access keys
 task_sdk.export
 
