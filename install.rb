@@ -11,7 +11,7 @@
 #       "kinetic-core" => {
 #         "access_key_id" => "key",
 #         "access_key_secret" => "secret",
-#         "bridge_path" =>  "http://localhost:8080/kinetic-bridgehub/app/api/v1/bridges/#{space_slug}-core",
+#         "bridge_path" =>  "http://localhost:8080/kinetic-bridgehub/app/api/v1/bridges/space-slug-core",
 #         "slug" =>  "kinetic-core"
 #       }
 #     },
@@ -22,12 +22,14 @@
 #     "space_slug" => "foo",
 #     "space_name" => "Foo",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "service_user_password" => "secret",
+#     "log_level" => "info"
 #   },
 #   "discussions" => {
 #     "api" => "http://localhost:8080/app/discussions/api/v1",
 #     "server" => "http://localhost:8080/app/discussions",
-#     "space_slug" => "foo"
+#     "space_slug" => "foo",
+#     "log_level" => "info"
 #   },
 #   "filehub" => {
 #     "api" => "http://localhost:8080/kinetic-filehub/app/api/v1",
@@ -41,14 +43,18 @@
 #         "slug" =>  "kinetic-core"
 #       }
 #     },
+#     "log_level" => "info"
 #   },
 #   "task" => {
 #     "api" => "http://localhost:8080/kinetic-task/app/api/v1",
 #     "api_v2" => "http://localhost:8080/kinetic-task/app/api/v2",
 #     "server" => "http://localhost:8080/kinetic-task",
 #     "space_slug" => "foo",
+#     "username" => "admin",
+#     "password" => "admin_password",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "service_user_password" => "secret",
+#     "log_level" => "info"
 #   }
 # }
 
@@ -90,14 +96,14 @@ require 'kinetic_sdk'
 
 # access_key used for core to task service
 #   communications (webhooks, source)
-core_task_access_key = "kinops-request-ce"
+core_task_access_key = "kinops-request-ce" # leaving name as is for now
 
 # pre-shared key for core webhooks to task
 task_access_keys = {
   core_task_access_key => {
     "identifier" => core_task_access_key,
     "secret" => KineticSdk::Utils::Random.simple,
-    "description" => "Kinops Request CE",
+    "description" => "Core Service Access Key",
   }
 }
 
@@ -150,17 +156,24 @@ task_handler_configurations = {
 # core
 # ------------------------------------------------------------------------------
 
-space_config = JSON.parse(File.read("#{core_path}/space.json"))
-
 space_sdk = KineticSdk::Core.new({
   space_server_url: vars["core"]["server"],
   space_slug: vars["core"]["space_slug"],
   username: vars["core"]["service_user_username"],
   password: vars["core"]["service_user_password"],
   options: {
+    log_level: vars["core"]["log_level"] || "info",
     export_directory: "#{core_path}",
   }
 })
+
+# cleanup any kapps that are precreated with the space (catalog)
+(space_sdk.find_kapps.content['kapps'] || []).each do |item|
+  space_sdk.delete_kapp(item['slug'])
+end
+
+# cleanup any existing spds that are precreated with the space (everyone, etc)
+space_sdk.delete_space_security_policy_definitions
 
 logger.info "Installing the core components for the \"#{template_name}\" template."
 logger.info "  installing with api: #{space_sdk.api_url}"
@@ -181,12 +194,12 @@ space_sdk.update_space({
     "Web Server Url" => [vars["core"]["server"]]
   },
   "name" => vars["core"]["space_name"],
-  # "filestore" => {                          *** THIS IS CURRENTLY IN DATA-MANAGER ***
-  #   "slug" => vars["filehub"]["filestores"]["kinetic-core"]["slug"],
-  #   "filehubUrl" => vars["filehub"]["server"],
-  #   "key" => vars["filehub"]["filestores"]["kinetic-core"]["access_key_id"],
-  #   "secret" => vars["filehub"]["filestores"]["kinetic-core"]["access_key_secret"],
-  # }
+  "filestore" => {
+    "slug" => vars["filehub"]["filestores"]["kinetic-core"]["slug"],
+    "filehubUrl" => vars["filehub"]["server"],
+    "key" => vars["filehub"]["filestores"]["kinetic-core"]["access_key_id"],
+    "secret" => vars["filehub"]["filestores"]["kinetic-core"]["access_key_secret"],
+  }
 })
 
 # import kapp & datastore submissions
@@ -276,10 +289,11 @@ end
 
 task_sdk = KineticSdk::Task.new({
   app_server_url: vars["task"]["server"],
-  username: vars["task"]["service_user_username"],
-  password: vars["task"]["service_user_password"],
+  username: vars["task"]["username"],
+  password: vars["task"]["password"],
   options: {
     export_directory: "#{task_path}",
+    log_level: vars["task"]["log_level"] || "info",
   }
 })
 
@@ -309,8 +323,6 @@ end
 task_sdk.import_groups
 task_sdk.import_handlers(true)
 task_sdk.import_policy_rules
-task_sdk.import_routines(true)
-task_sdk.import_categories
 
 # import sources
 Dir["#{task_path}/sources/*.json"].each do|file|
@@ -323,6 +335,9 @@ Dir["#{task_path}/sources/*.json"].each do|file|
   # add or update the source
   not_installed ? task_sdk.add_source(required_source) : task_sdk.update_source(required_source)
 end
+
+task_sdk.import_routines(true)
+task_sdk.import_categories
 
 # import trees and force overwrite
 task_sdk.import_trees(true)

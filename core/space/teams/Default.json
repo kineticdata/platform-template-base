@@ -5,12 +5,6 @@
       "values": [
         "True"
       ]
-    },
-    {
-      "name": "Discussion Id",
-      "values": [
-        "bfc8f200-7641-11e9-9801-6d5144ecd88f"
-      ]
     }
   ],
   "description": "The Default Team is assigned Queue Tasks when a team has no members, or when forms have no Assigned Team set.",

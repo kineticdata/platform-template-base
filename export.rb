@@ -15,6 +15,7 @@
 #         "slug" =>  "kinetic-core"
 #       }
 #     },
+#     "log_level" => "info"
 #   },
 #   "core" => {
 #     "api" => "http://localhost:8080/kinetic/app/api/v1",
@@ -22,12 +23,14 @@
 #     "space_slug" => "foo",
 #     "space_name" => "Foo",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "service_user_password" => "secret",
+#     "log_level" => "info"
 #   },
 #   "discussions" => {
 #     "api" => "http://localhost:8080/app/discussions/api/v1",
 #     "server" => "http://localhost:8080/app/discussions",
-#     "space_slug" => "foo"
+#     "space_slug" => "foo",
+#     "log_level" => "info"
 #   },
 #   "filehub" => {
 #     "api" => "http://localhost:8080/kinetic-filehub/app/api/v1",
@@ -41,6 +44,7 @@
 #         "slug" =>  "kinetic-core"
 #       }
 #     },
+#     "log_level" => "info"
 #   },
 #   "task" => {
 #     "api" => "http://localhost:8080/kinetic-task/app/api/v1",
@@ -48,7 +52,8 @@
 #     "server" => "http://localhost:8080/kinetic-task",
 #     "space_slug" => "foo",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "service_user_password" => "secret",
+#     "log_level" => "info"
 #   }
 # }
 
@@ -72,6 +77,23 @@ end
 platform_template_path = File.dirname(File.expand_path(__FILE__))
 core_path = File.join(platform_template_path, "core")
 task_path = File.join(platform_template_path, "task")
+
+# ------------------------------------------------------------------------------
+# methods
+# ------------------------------------------------------------------------------
+
+# Removes discussion id attribute from a given model
+def remove_discussion_id_attribute(model)
+  if !model.is_a?(Array)
+    if model.has_key?("attributes")
+      scrubbed = model["attributes"].select do |attribute|
+        attribute["name"] != "Discussion Id"
+      end
+    end
+    model["attributes"] = scrubbed
+  end
+  return model
+end
 
 # ------------------------------------------------------------------------------
 # constants
@@ -122,53 +144,78 @@ space_sdk = KineticSdk::Core.new({
   password: vars["core"]["service_user_password"],
   options: {
     export_directory: "#{core_path}",
+    log_level: vars["core"]["log_level"] || "info"
   }
 })
 
-# Fetch Export from Core and write to files
+# fetch export from core service and write to export directory
 logger.info "Exporting the core components for the \"#{template_name}\" template."
 logger.info "  exporting with api: #{space_sdk.api_url}"
 logger.info "   - exporting configuration data (Kapps,forms, etc)"
 space_sdk.export_space
 
-# Export Submissions
+# cleanup properties that should not be committed with export
+# bridge keys
+Dir["#{core_path}/space/bridges/*.json"].each do |filename|
+  bridge = JSON.parse(File.read(filename))
+  if bridge.has_key?("key")
+    bridge.delete("key")
+    File.open(filename, 'w') { |file| file.write(JSON.pretty_generate(bridge)) }
+  end
+end
+
+# cleanup filestore key
+filename = "#{core_path}/space.json"
+space = JSON.parse(File.read(filename))
+if space.has_key?("filestore") && space["filestore"].has_key?("key")
+  space["filestore"].delete("key")
+  File.open(filename, 'w') { |file| file.write(JSON.pretty_generate(space)) }
+end
+
+# cleanup discussion ids
+Dir["#{core_path}/**/*.json"].each do |filename|
+  model = remove_discussion_id_attribute(JSON.parse(File.read(filename)))
+  File.open(filename, 'w') { |file| file.write(JSON.pretty_generate(model)) }
+end
+
+# export submissions
 logger.info "  - exporting and writing submission data"
 SUBMISSIONS_TO_EXPORT.each do |item|
   is_datastore = item["datastore"] || false
   logger.info "    - #{is_datastore ? 'datastore' : 'kapp'} form #{item['formSlug']}"
-  # Build directory to write files to
+  # build directory to write files to
   submission_path = is_datastore ?
     "#{core_path}/space/datastore/forms/#{item['formSlug']}" :
     "#{core_path}/kapps/#{item['kappSlug']}/forms/#{item['formSlug']}"
 
-  # Create folder to write submission data to
+  # create folder to write submission data to
   FileUtils.mkdir_p(submission_path, :mode => 0700)
 
-  # Build params to pass to the retrieve_form_submissions method
+  # build params to pass to the retrieve_form_submissions method
   params = {"include" => "values", "limit" => 1000, "direction" => "ASC"}
 
-  # Open the submissions file in write mode
+  # open the submissions file in write mode
   file = File.open("#{submission_path}/submissions.ndjson", 'w');
 
-  # Ensure the file is empty
+  # ensure the file is empty
   file.truncate(0)
   response = nil
   begin
-    # Get submissions
+    # get submissions
     response = is_datastore ?
       space_sdk.find_all_form_datastore_submissions(item['formSlug'], params).content :
       space_sdk.find_form_submissions(item['kappSlug'], item['formSlug'], params).content
     if response.has_key?("submissions")
-      # Write each submission on its own line
+      # write each submission on its own line
       (response["submissions"] || []).each do |submission|
-        # Append each submission (removing the submission unwanted attributes)
+        # append each submission (removing the submission unwanted attributes)
         file.puts(JSON.generate(submission.delete_if { |key, value| REMOVE_DATA_PROPERTIES.member?(key)}))
       end
     end
     params['pageToken'] = response['nextPageToken']
-    # Get next page of submissions if there are more
+    # get next page of submissions if there are more
   end while !response.nil? && !response['nextPageToken'].nil?
-  # Close the submissions file
+  # close the submissions file
   file.close()
 end
 logger.info "  - submission data export complete"
@@ -176,6 +223,8 @@ logger.info "  - submission data export complete"
 # ------------------------------------------------------------------------------
 # task
 # ------------------------------------------------------------------------------
+logger.info "Removing files and folders from the existing \"#{template_name}\" template."
+FileUtils.rm_rf Dir.glob("#{task_path}/*")
 
 task_sdk = KineticSdk::Task.new({
   app_server_url: vars["task"]["server"],
@@ -183,14 +232,15 @@ task_sdk = KineticSdk::Task.new({
   password: vars["task"]["service_user_password"],
   options: {
     export_directory: "#{task_path}",
+    log_level: vars["task"]["log_level"] || "info",
   }
 })
 
 logger.info "Exporting the task components for the \"#{template_name}\" template."
 logger.info "  exporting with api: #{task_sdk.api_url}"
 
-# Export all sources, trees, routines, handlers, groups,
-# policy rules, categories, and access keys
+# export all sources, trees, routines, handlers,
+# groups, policy rules, categories, and access keys
 task_sdk.export
 
 

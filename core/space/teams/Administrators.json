@@ -11,12 +11,6 @@
       "values": [
         "fa-wrench"
       ]
-    },
-    {
-      "name": "Discussion Id",
-      "values": [
-        "c01208f0-7641-11e9-9801-6d5144ecd88f"
-      ]
     }
   ],
   "description": "The administrators team is a collection of users who manage the kinops System. \n\nThe Administrators team is responsible for\n- Handling workflow errors\n- New user registration requests\n- Suggesting a new service\n- Requesting an alert",

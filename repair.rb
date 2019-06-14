@@ -1,40 +1,49 @@
 # Action options must be passed as a JSON string
 #
 # Format with example values:
-# 
+#
 # {
 #   "bridgehub" => {
-#     "api" => "http://localhost:8080/kinetic-bridgehub/app/api/v1",
-#     "bridge_slug" => "ce-foo",
+#     "api" => "http://localhost:8080/kinetic-bridgehub/app/manage-api/v1",
 #     "server" => "http://localhost:8080/kinetic-bridgehub",
-#     "space_slug" => "foo",
-#     "username" => "admin",
-#     "password" => "admin",
-#     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "space_slug" => "acme",
+#     "bridges" => {
+#       "kinetic-core" => {
+#         "access_key_id" => "key",
+#         "access_key_secret" => "secret",
+#         "bridge_path" =>  "http://localhost:8080/kinetic-bridgehub/app/api/v1/bridges/space-slug-core",
+#         "slug" =>  "kinetic-core"
+#       }
+#     },
 #   },
 #   "core" => {
 #     "api" => "http://localhost:8080/kinetic/app/api/v1",
 #     "server" => "http://localhost:8080/kinetic",
 #     "space_slug" => "foo",
 #     "space_name" => "Foo",
-#     "username" => "admin",
-#     "password" => "admin",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "service_user_password" => "secret",
+#     "log_level" => "info"
 #   },
 #   "discussions" => {
 #     "api" => "http://localhost:8080/app/discussions/api/v1",
 #     "server" => "http://localhost:8080/app/discussions",
-#     "space_slug" => "foo"
+#     "space_slug" => "foo",
+#     "log_level" => "info"
 #   },
 #   "filehub" => {
 #     "api" => "http://localhost:8080/kinetic-filehub/app/api/v1",
-#     "filestore_slug" => "ce-foo",
 #     "server" => "http://localhost:8080/kinetic-filehub",
 #     "space_slug" => "foo",
-#     "username" => "admin",
-#     "password" => "admin"
+#     "filestores" => {
+#       "kinetic-core" => {
+#         "access_key_id" => "key",
+#         "access_key_secret" => "secret",
+#         "filestore_path" =>  "http://localhost:8080/kinetic-bridgehub/bridges/kinetic-core",
+#         "slug" =>  "kinetic-core"
+#       }
+#     },
+#     "log_level" => "info"
 #   },
 #   "task" => {
 #     "api" => "http://localhost:8080/kinetic-task/app/api/v1",
@@ -42,9 +51,10 @@
 #     "server" => "http://localhost:8080/kinetic-task",
 #     "space_slug" => "foo",
 #     "username" => "admin",
-#     "password" => "admin",
+#     "password" => "admin_password",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "service_user_password" => "secret",
+#     "log_level" => "info"
 #   }
 # }
 
