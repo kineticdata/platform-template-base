@@ -11,7 +11,7 @@
 #       "kinetic-core" => {
 #         "access_key_id" => "key",
 #         "access_key_secret" => "secret",
-#         "bridge_path" =>  "http://localhost:8080/kinetic-bridgehub/app/api/v1/bridges/#{space_slug}-core",
+#         "bridge_path" =>  "http://localhost:8080/kinetic-bridgehub/app/api/v1/bridges/space-slug-core",
 #         "slug" =>  "kinetic-core"
 #       }
 #     },

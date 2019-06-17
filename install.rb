@@ -188,6 +188,7 @@ space_sdk.import_space(vars["core"]["space_slug"])
 space_sdk.update_space({
   "attributesMap" => {
     "Discussion Id" => [""],
+    "Task Server Scheme" => [URI(vars["task"]["server"]).scheme],
     "Task Server Host" => [URI(vars["task"]["server"]).host],
     "Task Server Space Slug" => [vars["task"]["space_slug"]],
     "Task Server Url" => [vars["task"]["server"]],
@@ -350,7 +351,7 @@ task_sdk.find_handlers.content['handlers'].each do |handler|
     logger.info "Updating handler #{handler_definition_id}"
     task_sdk.update_handler(handler_definition_id, {
       "properties" => {
-        "api_location" => vars["core"]["server"],
+        "api_location" => vars["core"]["api"],
         "api_username" => vars["core"]["service_user_username"],
         "api_password" => vars["core"]["service_user_password"]
       }
