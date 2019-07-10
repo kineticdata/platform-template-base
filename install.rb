@@ -302,6 +302,7 @@ logger.info "Installing the task components for the \"#{template_name}\" templat
 logger.info "  installing with api: #{task_sdk.api_url}"
 
 # cleanup playground data
+task_sdk.delete_categories
 task_sdk.delete_groups
 task_sdk.delete_users
 task_sdk.delete_policy_rules
