@@ -85,6 +85,8 @@ logger.level = Logger::INFO
 raise "Missing JSON argument string passed to template install script" if ARGV.empty?
 begin
   vars = JSON.parse(ARGV[0])
+  # initialize the data property unless it already exists
+  vars["data"] = {} unless vars.has_key?("data")
 rescue => e
   raise "Template #{template_name} install error: #{e.inspect}"
 end
@@ -157,7 +159,7 @@ task_source_properties = {
 }
 
 # task handler info values
-smtp = vars["smtp"] || {}
+smtp = vars["data"]["smtp"] || {}
 task_handler_configurations = {
   "smtp_email_send" => {
     "server" => smtp["server"] || "mysmtp.com",
@@ -313,7 +315,7 @@ space_sdk.update_bridge("Kinetic Core", {
 end
 
 # create any additional users that were specified
-(vars["users"] || []).each do |user|
+(vars["data"]["users"] || []).each do |user|
   space_sdk.add_user(user)
 end
 
