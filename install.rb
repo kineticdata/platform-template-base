@@ -55,6 +55,21 @@
 #     "service_user_username" => "service_user_username",
 #     "service_user_password" => "secret",
 #     "log_level" => "info"
+#   },
+#   "data" => {
+#     "users" => [
+#       {
+#         "username" => "joe.user"
+#       }
+#     ],
+#     "smtp" => {
+#       "server" => "smtp.gmail.com",
+#       "port" => "587",
+#       "tls" => "true",
+#       "username" => "joe.blow@gmail.com",
+#       "password" => "test",
+#       "from_address" => "wally@kinops.io"
+#     }
 #   }
 # }
 
@@ -141,15 +156,30 @@ task_source_properties = {
   }
 }
 
-# TODO - task handler info values
+# task handler info values
+smtp = vars["smtp"] || {}
 task_handler_configurations = {
-  "smtp_server" => "mysmtp.com",
-  "smtp_port" => "25",
-  "smtp_tls" => "true",
-  "smtp_username" => "joe.blow",
-  "smtp_password" => "password",
-  "smtp_from_address" => "j@j.com",
-  "smtp_auth_type" => 'plain',
+  "smtp_email_send" => {
+    "server" => smtp["server"] || "mysmtp.com",
+    "port" => (smtp["port"] || "25").to_s,
+    "tls" => (smtp["tls"] || "true").to_s,
+    "username" => smtp["username"] || "joe.blow",
+    "password" => smtp["password"] || "password"
+  },
+  "kinetic_request_ce_notification_template_send" => {
+    "smtp_server" => smtp["server"] || "mysmtp.com",
+    "smtp_port" => (smtp["port"] || "25").to_s,
+    "smtp_tls" => (smtp["tls"] || "true").to_s,
+    "smtp_username" => smtp["username"] || "joe.blow",
+    "smtp_password" => smtp["password"] || "password",
+    "smtp_from_address" => smtp["from_address"] || "j@j.com",
+    "smtp_auth_type" => 'plain',
+    "api_server" => vars["core"]["server"],
+    "api_username" => vars["core"]["service_user_username"],
+    "api_password" => vars["core"]["service_user_password"],
+    "space_slug" => nil,
+    "enable_debug_logging" => "No"
+  }
 }
 
 # ------------------------------------------------------------------------------
@@ -282,7 +312,10 @@ space_sdk.update_bridge("Kinetic Core", {
   end
 end
 
-
+# create any additional users that were specified
+(vars["users"] || []).each do |user|
+  space_sdk.add_user(user)
+end
 
 # ------------------------------------------------------------------------------
 # task
@@ -389,30 +422,11 @@ task_sdk.find_handlers.content['handlers'].each do |handler|
     })
   elsif handler_definition_id.start_with?("kinetic_request_ce_notification_template_send_v")
     task_sdk.update_handler(handler_definition_id, {
-      "properties" => {
-        'smtp_server' => task_handler_configurations["smtp_server"],
-        'smtp_port' => task_handler_configurations["smtp_port"],
-        'smtp_tls' => task_handler_configurations["smtp_tls"],
-        'smtp_username' => task_handler_configurations["smtp_username"],
-        'smtp_password' => task_handler_configurations["smtp_password"],
-        'smtp_from_address' => task_handler_configurations["smtp_from_address"],
-        'smtp_auth_type' => task_handler_configurations["smtp_auth_type"],
-        'api_server' => vars["core"]["server"],
-        'api_username' => vars["core"]["service_user_username"],
-        'api_password' => vars["core"]["service_user_password"],
-        'space_slug' => nil,
-        'enable_debug_logging' => "No"
-      }
+      "properties" => task_handler_configurations["kinetic_request_ce_notification_template_send"]
     })
   elsif handler_definition_id.start_with?("smtp_email_send")
     task_sdk.update_handler(handler_definition_id, {
-      "properties" => {
-        "server" => task_handler_configurations["smtp_server"],
-        "port" => task_handler_configurations["smtp_port"],
-        "tls" => task_handler_configurations["smtp_tls"],
-        "username" => task_handler_configurations["smtp_username"],
-        "password" => task_handler_configurations["smtp_password"]
-      }
+      "properties" => task_handler_configurations["smtp_email_send"]
     })
   elsif handler_definition_id.start_with?("kinetic_request_ce")
     task_sdk.update_handler(handler_definition_id, {
