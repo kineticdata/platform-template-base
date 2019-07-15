@@ -14,8 +14,7 @@
 #         "bridge_path" =>  "http://localhost:8080/kinetic-bridgehub/app/api/v1/bridges/space-slug-core",
 #         "slug" =>  "kinetic-core"
 #       }
-#     },
-#     "log_level" => "info"
+#     }
 #   },
 #   "core" => {
 #     "api" => "http://localhost:8080/kinetic/app/api/v1",
@@ -23,14 +22,12 @@
 #     "space_slug" => "foo",
 #     "space_name" => "Foo",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret",
-#     "log_level" => "info"
+#     "service_user_password" => "secret"
 #   },
 #   "discussions" => {
 #     "api" => "http://localhost:8080/app/discussions/api/v1",
 #     "server" => "http://localhost:8080/app/discussions",
-#     "space_slug" => "foo",
-#     "log_level" => "info"
+#     "space_slug" => "foo"
 #   },
 #   "filehub" => {
 #     "api" => "http://localhost:8080/kinetic-filehub/app/api/v1",
@@ -43,8 +40,7 @@
 #         "filestore_path" =>  "http://localhost:8080/kinetic-bridgehub/bridges/kinetic-core",
 #         "slug" =>  "kinetic-core"
 #       }
-#     },
-#     "log_level" => "info"
+#     }
 #   },
 #   "task" => {
 #     "api" => "http://localhost:8080/kinetic-task/app/api/v1",
@@ -52,8 +48,12 @@
 #     "server" => "http://localhost:8080/kinetic-task",
 #     "space_slug" => "foo",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret",
-#     "log_level" => "info"
+#     "service_user_password" => "secret"
+#   },
+#   "http_options" => {
+#     "log_level" => "info",
+#     "ssl_ca_file" => "/etc/ca.crt",
+#     "ssl_verify_mode" => "none"
 #   }
 # }
 
@@ -129,6 +129,10 @@ Dir.chdir(platform_template_path) { system("bundle", "install") }
 
 require 'kinetic_sdk'
 
+http_options = (vars["http_options"] || {}).each_with_object do |(key,value),result|
+  result[key.to_sym] = value
+end
+
 # ------------------------------------------------------------------------------
 # core
 # ------------------------------------------------------------------------------
@@ -142,10 +146,7 @@ space_sdk = KineticSdk::Core.new({
   space_slug: vars["core"]["space_slug"],
   username: vars["core"]["service_user_username"],
   password: vars["core"]["service_user_password"],
-  options: {
-    export_directory: "#{core_path}",
-    log_level: vars["core"]["log_level"] || "info"
-  }
+  options: http_options.merge({ export_directory: "#{core_path}" })
 })
 
 # fetch export from core service and write to export directory
@@ -230,10 +231,7 @@ task_sdk = KineticSdk::Task.new({
   app_server_url: vars["task"]["server"],
   username: vars["task"]["service_user_username"],
   password: vars["task"]["service_user_password"],
-  options: {
-    export_directory: "#{task_path}",
-    log_level: vars["task"]["log_level"] || "info",
-  }
+  options: http_options.merge({ export_directory: "#{task_path}" })
 })
 
 logger.info "Exporting the task components for the \"#{template_name}\" template."

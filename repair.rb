@@ -22,14 +22,12 @@
 #     "space_slug" => "foo",
 #     "space_name" => "Foo",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret",
-#     "log_level" => "info"
+#     "service_user_password" => "secret"
 #   },
 #   "discussions" => {
 #     "api" => "http://localhost:8080/app/discussions/api/v1",
 #     "server" => "http://localhost:8080/app/discussions",
-#     "space_slug" => "foo",
-#     "log_level" => "info"
+#     "space_slug" => "foo"
 #   },
 #   "filehub" => {
 #     "api" => "http://localhost:8080/kinetic-filehub/app/api/v1",
@@ -42,8 +40,7 @@
 #         "filestore_path" =>  "http://localhost:8080/kinetic-bridgehub/bridges/kinetic-core",
 #         "slug" =>  "kinetic-core"
 #       }
-#     },
-#     "log_level" => "info"
+#     }
 #   },
 #   "task" => {
 #     "api" => "http://localhost:8080/kinetic-task/app/api/v1",
@@ -53,8 +50,12 @@
 #     "username" => "admin",
 #     "password" => "admin_password",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret",
-#     "log_level" => "info"
+#     "service_user_password" => "secret"
+#   },
+#   "http_options" => {
+#     "log_level" => "info",
+#     "ssl_ca_file" => "/etc/ca.crt",
+#     "ssl_verify_mode" => "none"
 #   }
 # }
 
@@ -103,6 +104,9 @@ Dir.chdir(platform_template_path) { system("bundle", "install") }
 
 require 'kinetic_sdk'
 
+http_options = (vars["http_options"] || {}).each_with_object do |(key,value),result|
+  result[key.to_sym] = value
+end
 
 # ------------------------------------------------------------------------------
 # core
@@ -115,7 +119,8 @@ space_sdk = KineticSdk::Core.new({
   space_server_url: vars["core"]["server"],
   space_slug: space["slug"],
   username: vars["core"]["username"],
-  password: vars["core"]["password"]
+  password: vars["core"]["password"],
+  options: http_options.merge({ export_directory: "#{core_path}" })
 })
 
 logger.info "Repairing the core components for the \"#{template_name}\" template."
@@ -129,7 +134,8 @@ logger.info "  repairing with api: #{space_sdk.api_url}"
 task_sdk = KineticSdk::Task.new({
   app_server_url: vars["task"]["server"],
   username: vars["task"]["username"],
-  password: vars["task"]["password"]
+  password: vars["task"]["password"],
+  options: http_options.merge({ export_directory: "#{task_path}" })
 })
 
 logger.info "Repairing the task components for the \"#{template_name}\" template."

@@ -55,7 +55,7 @@
 #   "http_options" => {
 #     "log_level" => "info",
 #     "ssl_ca_file" => "/etc/ca.crt",
-#     "ssl_verify_mode" => "peer"
+#     "ssl_verify_mode" => "none"
 #   },
 #   "data" => {
 #     "users" => [
@@ -199,7 +199,7 @@ space_sdk = KineticSdk::Core.new({
   space_slug: vars["core"]["space_slug"],
   username: vars["core"]["service_user_username"],
   password: vars["core"]["service_user_password"],
-  options: http_options.merge({ export_directory: "#{core_path}" }
+  options: http_options.merge({ export_directory: "#{core_path}" })
 })
 
 # cleanup any kapps that are precreated with the space (catalog)
@@ -330,7 +330,7 @@ task_sdk = KineticSdk::Task.new({
   app_server_url: vars["task"]["server"],
   username: vars["task"]["username"],
   password: vars["task"]["password"],
-  options: http_options.merge({ export_directory: "#{task_path}" }
+  options: http_options.merge({ export_directory: "#{task_path}" })
 })
 
 logger.info "Installing the task components for the \"#{template_name}\" template."
