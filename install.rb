@@ -186,7 +186,7 @@ task_handler_configurations = {
 }
 
 http_options = (vars["http_options"] || {}).each_with_object do |(key,value),result|
-  result[key.to_sym] => value
+  result[key.to_sym] = value
 end
 
 
