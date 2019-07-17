@@ -54,6 +54,8 @@
 #   },
 #   "http_options" => {
 #     "log_level" => "info",
+#     "gateway_retry_limit" => 5,
+#     "gateway_retry_delay" => 1.0,
 #     "ssl_ca_file" => "/etc/ca.crt",
 #     "ssl_verify_mode" => "none"
 #   },
@@ -81,6 +83,10 @@ template_name = "platform-template-base"
 
 logger = Logger.new(STDERR)
 logger.level = Logger::INFO
+logger.formatter = proc do |severity, datetime, progname, msg|
+  date_format = datetime.utc.strftime("%Y-%m-%dT%H:%M:%S.%LZ")
+  "[#{date_format}] #{severity}: #{msg}\n"
+end
 
 
 raise "Missing JSON argument string passed to template install script" if ARGV.empty?
@@ -188,6 +194,8 @@ task_handler_configurations = {
 http_options = (vars["http_options"] || {}).each_with_object({}) do |(k,v),result|
   result[k.to_sym] = v
 end
+
+logger.info "REBUILT TEMPLATE HTTP OPTIONS: #{http_options.inspect}"
 
 
 # ------------------------------------------------------------------------------
