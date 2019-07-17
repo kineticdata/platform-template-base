@@ -195,8 +195,6 @@ http_options = (vars["http_options"] || {}).each_with_object({}) do |(k,v),resul
   result[k.to_sym] = v
 end
 
-logger.info "REBUILT TEMPLATE HTTP OPTIONS: #{http_options.inspect}"
-
 
 # ------------------------------------------------------------------------------
 # core
