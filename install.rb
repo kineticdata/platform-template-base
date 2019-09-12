@@ -4,15 +4,14 @@
 #
 # {
 #   "bridgehub" => {
-#     "api" => "http://localhost:8080/kinetic-bridgehub/app/manage-api/v1",
-#     "server" => "http://localhost:8080/kinetic-bridgehub",
+#     "api" => "http://localhost:8080/kinetic-bridgehub/app/api/v1",
+#     "client_api" => "http://localhost:8080/kinetic-bridgehub/acme/app/api/v1",
 #     "space_slug" => "acme",
 #     "bridges" => {
 #       "kinetic-core" => {
-#         "access_key_id" => "key",
-#         "access_key_secret" => "secret",
 #         "bridge_path" =>  "http://localhost:8080/kinetic-bridgehub/app/api/v1/bridges/space-slug-core",
-#         "slug" =>  "kinetic-core"
+#         "slug" =>  "kinetic-core",
+#         "service_endpoint_slug" => "bridgehub"
 #       }
 #     }
 #   },
@@ -37,7 +36,7 @@
 #       "kinetic-core" => {
 #         "access_key_id" => "key",
 #         "access_key_secret" => "secret",
-#         "filestore_path" =>  "http://localhost:8080/kinetic-bridgehub/bridges/kinetic-core",
+#         "filestore_path" =>  "http://localhost:8080/kinetic-filehub/filestores/kinetic-core",
 #         "slug" =>  "kinetic-core"
 #       }
 #     }
@@ -307,12 +306,16 @@ space_sdk.find_kapps.content['kapps'].each do |kapp|
   end
 end
 
-# update the core bridge with the cooresponding bridgehub connection info
-space_sdk.update_bridge("Kinetic Core", {
-  "key" => vars["bridgehub"]["bridges"]["kinetic-core"]["access_key_id"],
-  "secret" => vars["bridgehub"]["bridges"]["kinetic-core"]["access_key_secret"],
-  "url" => vars["bridgehub"]["bridges"]["kinetic-core"]["bridge_path"]
-})
+# update each bridge model mapping with the corresponding bridgehub service endpoint
+space_sdk.find_bridge_models.content['models'].each do |model|
+  exported_model = space_sdk.find_bridge_model(model['name'], { "export" => true }).content['model']
+  exported_model['mappings'].each do |mapping|
+    mapping.delete('bridgeName')
+    mapping['bridgeSlug'] = vars["bridgehub"]["bridges"]["kinetic-core"]["slug"]
+    mapping['serviceEndpointSlug'] = vars["bridgehub"]["bridges"]["kinetic-core"]["service_endpoint_slug"]
+    space_sdk.update_bridge_model_mapping(model['name'], mapping['name'], mapping)
+  end
+end
 
 # create or update oAuth clients
 [ oauth_client_prod_bundle, oauth_client_dev_bundle ].each do |client|

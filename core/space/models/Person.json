@@ -27,7 +27,7 @@
           "structureField": "${fields('email')}"
         }
       ],
-      "bridgeName": "Kinetic Core",
+      "bridgeSlug": "kinetic-core",
       "name": "Person",
       "qualifications": [
         {
@@ -47,6 +47,7 @@
           "query": null
         }
       ],
+      "serviceEndpointSlug": "bridgehub",
       "structure": "Users"
     }
   ],

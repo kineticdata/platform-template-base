@@ -5,14 +5,14 @@
 # {
 #   "bridgehub" => {
 #     "api" => "http://localhost:8080/kinetic-bridgehub/app/manage-api/v1",
+#     "client_api" => "http://localhost:8080/kinetic-bridgehub/acme/app/api/v1",
 #     "server" => "http://localhost:8080/kinetic-bridgehub",
 #     "space_slug" => "acme",
 #     "bridges" => {
 #       "kinetic-core" => {
-#         "access_key_id" => "key",
-#         "access_key_secret" => "secret",
 #         "bridge_path" =>  "http://localhost:8080/kinetic-bridgehub/app/api/v1/bridges/space-slug-core",
-#         "slug" =>  "kinetic-core"
+#         "slug" =>  "kinetic-core",
+#         "service_endpoint_slug" => "bridgehub"
 #       }
 #     }
 #   },
@@ -37,7 +37,7 @@
 #       "kinetic-core" => {
 #         "access_key_id" => "key",
 #         "access_key_secret" => "secret",
-#         "filestore_path" =>  "http://localhost:8080/kinetic-bridgehub/bridges/kinetic-core",
+#         "filestore_path" =>  "http://localhost:8080/kinetic-filehub/filestores/kinetic-core",
 #         "slug" =>  "kinetic-core"
 #       }
 #     }

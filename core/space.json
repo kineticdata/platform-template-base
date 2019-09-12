@@ -216,6 +216,9 @@
       "name": "Admins"
     }
   ],
+  "serviceEndpoints": [
+
+  ],
   "sessionInactiveLimitInSeconds": 2592000,
   "sharedBundleBase": "hydrogen-v1",
   "slug": "space-template",
