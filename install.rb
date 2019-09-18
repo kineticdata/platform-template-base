@@ -10,16 +10,15 @@
 #     "space_slug" => "acme",
 #     "bridges" => {
 #       "kinetic-core" => {
-#         "access_key_id" => "key",
-#         "access_key_secret" => "secret",
 #         "bridge_path" =>  "http://localhost:8080/kinetic-bridgehub/acme/app/api/v1/bridges/kinetic-core",
 #         "slug" =>  "kinetic-core",
-#         "service_endpoint_slug" => "bridgehub"
+#         "component_type" => "bridgehub"
 #       }
 #     }
 #   },
 #   "core" => {
 #     "api" => "http://localhost:8080/kinetic/app/api/v1",
+#     "proxy_url" => "http://localhost:8080/kinetic/app/components",
 #     "server" => "http://localhost:8080/kinetic",
 #     "space_slug" => "foo",
 #     "space_name" => "Foo",
@@ -309,13 +308,12 @@ space_sdk.find_kapps.content['kapps'].each do |kapp|
   end
 end
 
-# update each bridge model mapping with the corresponding bridgehub service endpoint
+# update each bridge model mapping with the corresponding bridgehub platform component
 space_sdk.find_bridge_models.content['models'].each do |model|
   exported_model = space_sdk.find_bridge_model(model['name'], { "export" => true }).content['model']
   exported_model['mappings'].each do |mapping|
     mapping.delete('bridgeName')
     mapping['bridgeSlug'] = vars["bridgehub"]["bridges"]["kinetic-core"]["slug"]
-    mapping['serviceEndpointSlug'] = vars["bridgehub"]["bridges"]["kinetic-core"]["service_endpoint_slug"]
     space_sdk.update_bridge_model_mapping(model['name'], mapping['name'], mapping)
   end
 end
