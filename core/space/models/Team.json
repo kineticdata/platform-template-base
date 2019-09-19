@@ -25,7 +25,6 @@
           "query": "exclude=Role"
         }
       ],
-      "serviceEndpointSlug": "bridgehub",
       "structure": "Teams"
     }
   ],
