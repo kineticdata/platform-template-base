@@ -1,21 +1,9 @@
 {
-  "authStrategy": {
-    "type": "Signature",
-    "properties": [
-      {
-        "name": "Key",
-        "value": "kinops-request-ce"
-      },
-      {
-        "name": "Secret",
-        "sensitive": "true"
-      }
-    ]
-  },
+  "authStrategy": {},
   "event": "Created",
   "filter": "",
   "name": "Team Created",
   "type": "Team",
-  "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/${space('attribute:Task Source Name')}/Teams/Created",
+  "url": "/app/api/v1/run-tree/${space('attribute:Task Source Name')}/Teams/Created",
   "attributes": null
 }

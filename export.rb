@@ -3,53 +3,27 @@
 # Format with example values:
 #
 # {
-#   "bridgehub" => {
-#     "api" => "http://localhost:8080/kinetic-bridgehub/app/api/v1",
-#     "client_api" => "http://localhost:8080/kinetic-bridgehub/acme/app/api/v1",
-#     "server" => "http://localhost:8080/kinetic-bridgehub",
-#     "space_slug" => "acme",
-#     "bridges" => {
-#       "kinetic-core" => {
-#         "bridge_path" =>  "http://localhost:8080/kinetic-bridgehub/acme/app/api/v1/bridges/kinetic-core",
-#         "slug" =>  "kinetic-core",
-#         "component_type" => "bridgehub"
-#       }
-#     }
-#   },
 #   "core" => {
 #     "api" => "http://localhost:8080/kinetic/app/api/v1",
-#     "proxy_url" => "http://localhost:8080/kinetic/app/components",
+#     "agent_api" => "http://localhost:8080/kinetic/foo/app/components/agent/app/api/v1",
+#     "proxy_url" => "http://localhost:8080/kinetic/foo/app/components",
 #     "server" => "http://localhost:8080/kinetic",
 #     "space_slug" => "foo",
 #     "space_name" => "Foo",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
-#   },
-#   "discussions" => {
-#     "api" => "http://localhost:8080/app/discussions/api/v1",
-#     "server" => "http://localhost:8080/app/discussions",
-#     "space_slug" => "foo"
-#   },
-#   "filehub" => {
-#     "api" => "http://localhost:8080/kinetic-filehub/app/api/v1",
-#     "server" => "http://localhost:8080/kinetic-filehub",
-#     "space_slug" => "foo",
-#     "filestores" => {
-#       "kinetic-core" => {
-#         "access_key_id" => "key",
-#         "access_key_secret" => "secret",
-#         "filestore_path" =>  "http://localhost:8080/kinetic-filehub/filestores/kinetic-core",
-#         "slug" =>  "kinetic-core"
-#       }
-#     }
+#     "service_user_password" => "secret",
+#     "task_api_v1" => "http://localhost:8080/kinetic/foo/app/components/task/app/api/v1",
+#     "task_api_v2" => "http://localhost:8080/kinetic/foo/app/components/task/app/api/v2"
 #   },
 #   "task" => {
 #     "api" => "http://localhost:8080/kinetic-task/app/api/v1",
 #     "api_v2" => "http://localhost:8080/kinetic-task/app/api/v2",
+#     "component_type" => "task",
 #     "server" => "http://localhost:8080/kinetic-task",
 #     "space_slug" => "foo",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "service_user_password" => "secret",
+#     "signature_secret" => "1234asdf5678jkl;"
 #   },
 #   "http_options" => {
 #     "log_level" => "info",

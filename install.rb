@@ -3,62 +3,48 @@
 # Format with example values:
 #
 # {
-#   "bridgehub" => {
-#     "api" => "http://localhost:8080/kinetic-bridgehub/app/api/v1",
-#     "client_api" => "http://localhost:8080/kinetic-bridgehub/acme/app/api/v1",
-#     "server" => "http://localhost:8080/kinetic-bridgehub",
-#     "space_slug" => "acme",
-#     "bridges" => {
-#       "kinetic-core" => {
-#         "bridge_path" =>  "http://localhost:8080/kinetic-bridgehub/acme/app/api/v1/bridges/kinetic-core",
-#         "slug" =>  "kinetic-core",
-#         "component_type" => "bridgehub"
-#       }
-#     }
+#   "agent" => {
+#     "component_type" => "agent",
+#     "bridge_api" => "/app/api/v1/bridges",
+#     "bridge_path" => "/app/api/v1/bridges/bridges/kinetic-core",
+#     "bridge_slug" => "kinetic-core",
+#     "filestore_api" => "/app/api/v1/filestores",
+#     "service_user_username" => "service_user_username",
+#     "service_user_password" => "secret"
 #   },
 #   "core" => {
 #     "api" => "http://localhost:8080/kinetic/app/api/v1",
-#     "proxy_url" => "http://localhost:8080/kinetic/app/components",
+#     "agent_api" => "http://localhost:8080/kinetic/foo/app/components/agent/app/api/v1",
+#     "proxy_url" => "http://localhost:8080/kinetic/foo/app/components",
 #     "server" => "http://localhost:8080/kinetic",
 #     "space_slug" => "foo",
 #     "space_name" => "Foo",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "service_user_password" => "secret",
+#     "task_api_v1" => "http://localhost:8080/kinetic/foo/app/components/task/app/api/v1",
+#     "task_api_v2" => "http://localhost:8080/kinetic/foo/app/components/task/app/api/v2"
 #   },
 #   "discussions" => {
 #     "api" => "http://localhost:8080/app/discussions/api/v1",
 #     "server" => "http://localhost:8080/app/discussions",
 #     "space_slug" => "foo"
 #   },
-#   "filehub" => {
-#     "api" => "http://localhost:8080/kinetic-filehub/app/api/v1",
-#     "server" => "http://localhost:8080/kinetic-filehub",
-#     "space_slug" => "foo",
-#     "filestores" => {
-#       "kinetic-core" => {
-#         "access_key_id" => "key",
-#         "access_key_secret" => "secret",
-#         "filestore_path" =>  "http://localhost:8080/kinetic-filehub/filestores/kinetic-core",
-#         "slug" =>  "kinetic-core"
-#       }
-#     }
-#   },
 #   "task" => {
 #     "api" => "http://localhost:8080/kinetic-task/app/api/v1",
 #     "api_v2" => "http://localhost:8080/kinetic-task/app/api/v2",
+#     "component_type" => "task",
 #     "server" => "http://localhost:8080/kinetic-task",
 #     "space_slug" => "foo",
-#     "username" => "admin",
-#     "password" => "admin_password",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "service_user_password" => "secret",
+#     "signature_secret" => "1234asdf5678jkl;"
 #   },
 #   "http_options" => {
 #     "log_level" => "info",
 #     "gateway_retry_limit" => 5,
 #     "gateway_retry_delay" => 1.0,
-#     "ssl_ca_file" => "/etc/ca.crt",
-#     "ssl_verify_mode" => "none"
+#     "ssl_ca_file" => "/app/ssl/tls.crt",
+#     "ssl_verify_mode" => "peer"
 #   },
 #   "data" => {
 #     "users" => [
@@ -66,6 +52,18 @@
 #         "username" => "joe.user"
 #       }
 #     ],
+#     "space" => {
+#       "attributesMap" => {
+#         "Platform Host URL" => [ "http://localhost:8080" ]
+#       }
+#     },
+#     "handlers" => {
+#       "kinetic_core_system_api_v1" => {
+#         "api_username" => "admin",
+#         "api_password" => "password",
+#         "api_location" => "http://localhost:8080/app/api/v1"
+#       }
+#     }
 #     "smtp" => {
 #       "server" => "smtp.gmail.com",
 #       "port" => "587",
@@ -118,19 +116,6 @@ require 'kinetic_sdk'
 # ------------------------------------------------------------------------------
 # common
 # ------------------------------------------------------------------------------
-
-# access_key used for core to task service
-#   communications (webhooks, source)
-core_task_access_key = "kinops-request-ce" # leaving name as is for now
-
-# pre-shared key for core webhooks to task
-task_access_keys = {
-  core_task_access_key => {
-    "identifier" => core_task_access_key,
-    "secret" => KineticSdk::Utils::Random.simple,
-    "description" => "Core Service Access Key",
-  }
-}
 
 # oAuth client for production bundle
 oauth_client_prod_bundle = {
@@ -191,6 +176,7 @@ task_handler_configurations = {
     "enable_debug_logging" => "No"
   }
 }
+task_handler_configurations = task_handler_configurations.merge(vars["data"]["handlers"] || {})
 
 http_options = (vars["http_options"] || {}).each_with_object({}) do |(k,v),result|
   result[k.to_sym] = v
@@ -223,26 +209,28 @@ logger.info "  installing with api: #{space_sdk.api_url}"
 # import the space for the template
 space_sdk.import_space(vars["core"]["space_slug"])
 
+# set space attributes
+space_attributes_map = {
+  "Discussion Id" => [""],
+  "Task Server Scheme" => [URI(vars["task"]["server"]).scheme],
+  "Task Server Host" => [URI(vars["task"]["server"]).host],
+  "Task Server Space Slug" => [vars["task"]["space_slug"]],
+  "Task Server Url" => [vars["task"]["server"]],
+  "Web Server Url" => [vars["core"]["server"]]
+}
+# set space attributes passed in the variable data
+vars_space_attributes_map = (vars["data"].has_key?("space") && 
+    vars["data"]["space"].has_key?("attributesMap")) ? 
+    vars["data"]["space"]["attributesMap"] : {}
+# merge in any space attributes passed in the variable data
+space_attributes_map = space_attributes_map.merge(vars_space_attributes_map)
+
 # update the space properties
 #   set required space attributes
 #   set space name from vars
-#   setup the filehub service
 space_sdk.update_space({
-  "attributesMap" => {
-    "Discussion Id" => [""],
-    "Task Server Scheme" => [URI(vars["task"]["server"]).scheme],
-    "Task Server Host" => [URI(vars["task"]["server"]).host],
-    "Task Server Space Slug" => [vars["task"]["space_slug"]],
-    "Task Server Url" => [vars["task"]["server"]],
-    "Web Server Url" => [vars["core"]["server"]]
-  },
-  "name" => vars["core"]["space_name"],
-  "filestore" => {
-    "slug" => vars["filehub"]["filestores"]["kinetic-core"]["slug"],
-    "filehubUrl" => vars["filehub"]["server"],
-    "key" => vars["filehub"]["filestores"]["kinetic-core"]["access_key_id"],
-    "secret" => vars["filehub"]["filestores"]["kinetic-core"]["access_key_secret"],
-  }
+  "attributesMap" => space_attributes_map,
+  "name" => vars["core"]["space_name"]
 })
 
 # import kapp & datastore submissions
@@ -273,14 +261,7 @@ space_sdk.find_webhooks_on_space.content['webhooks'].each do |webhook|
     # update the webhook
     space_sdk.update_webhook_on_space(webhook['name'], {
       "url" => url,
-      # add the signature access key
-      "authStrategy" => {
-        "type" => "Signature",
-        "properties" => [
-          { "name" => "Key", "value" => task_access_keys[core_task_access_key]['identifier'] },
-          { "name" => "Secret", "value" => task_access_keys[core_task_access_key]['secret'] }
-        ]
-      }
+      "authStrategy" => {}
     })
   end
 end
@@ -295,25 +276,18 @@ space_sdk.find_kapps.content['kapps'].each do |kapp|
       # update the webhook
       space_sdk.update_webhook_on_kapp(kapp['slug'], webhook['name'], {
         "url" => url,
-        # add the signature access key
-        "authStrategy" => {
-          "type" => "Signature",
-          "properties" => [
-            { "name" => "Key", "value" => task_access_keys[core_task_access_key]['identifier'] },
-            { "name" => "Secret", "value" => task_access_keys[core_task_access_key]['secret'] }
-          ]
-        }
+        "authStrategy" => {}
       })
     end
   end
 end
 
-# update each bridge model mapping with the corresponding bridgehub platform component
+# update each bridge model mapping with the corresponding bridge in the agent platform component
 space_sdk.find_bridge_models.content['models'].each do |model|
   exported_model = space_sdk.find_bridge_model(model['name'], { "export" => true }).content['model']
   exported_model['mappings'].each do |mapping|
     mapping.delete('bridgeName')
-    mapping['bridgeSlug'] = vars["bridgehub"]["bridges"]["kinetic-core"]["slug"]
+    mapping['bridgeSlug'] = "kinetic-core"
     space_sdk.update_bridge_model_mapping(model['name'], mapping['name'], mapping)
   end
 end
@@ -337,9 +311,9 @@ end
 # ------------------------------------------------------------------------------
 
 task_sdk = KineticSdk::Task.new({
-  app_server_url: vars["task"]["server"],
-  username: vars["task"]["username"],
-  password: vars["task"]["password"],
+  app_server_url: "#{vars["core"]["proxy_url"]}/task",
+  username: vars["core"]["service_user_username"],
+  password: vars["core"]["service_user_password"],
   options: http_options.merge({ export_directory: "#{task_path}" })
 })
 
@@ -359,7 +333,7 @@ Dir["#{task_path}/access-keys/*.json"].each do|file|
   # determine if access_key is already installed
   not_installed = task_sdk.find_access_key(required_access_key["identifier"]).status == 404
   # set access key secret
-  required_access_key["secret"] = task_access_keys[required_access_key["identifier"]]["secret"] || "SETME"
+  required_access_key["secret"] = "SETME"
   # add or update the access key
   not_installed ?
     task_sdk.add_access_key(required_access_key) :
@@ -393,64 +367,78 @@ task_sdk.import_trees(true)
 task_sdk.find_handlers.content['handlers'].each do |handler|
   handler_definition_id = handler["definitionId"]
 
-  if handler_definition_id.start_with?("kinetic_core_api_v1")
+  if task_handler_configurations.has_key?(handler_definition_id)
     logger.info "Updating handler #{handler_definition_id}"
     task_sdk.update_handler(handler_definition_id, {
-      "properties" => {
-        "api_location" => vars["core"]["api"],
-        "api_username" => vars["core"]["service_user_username"],
-        "api_password" => vars["core"]["service_user_password"]
-      }
+      "properties" => task_handler_configurations[handler_definition_id]
     })
-  elsif handler_definition_id.start_with?("kinetic_discussions_api_v1")
-    logger.info "Updating handler #{handler_definition_id}"
-    task_sdk.update_handler(handler_definition_id, {
-      "properties" => {
-        "api_oauth_location" => "#{vars["core"]["server"]}/app/oauth/token?grant_type=client_credentials&response_type=token",
-        "api_location" => vars["discussions"]["api"],
-        "api_username" => vars["core"]["service_user_username"],
-        "api_password" => vars["core"]["service_user_password"]
-      }
-    })
-  elsif handler_definition_id.start_with?("kinetic_task_api_v1")
-    logger.info "Updating handler #{handler_definition_id}"
-    task_sdk.update_handler(handler_definition_id, {
-      "properties" => {
-        "api_location" => vars["task"]["api"],
-        "api_username" => vars["task"]["service_user_username"],
-        "api_password" => vars["task"]["service_user_password"],
-        "api_access_key_identifier" => task_access_keys[core_task_access_key]['identifier'],
-        "api_access_key_secret" => task_access_keys[core_task_access_key]['secret']
-      }
-    })
-  elsif handler_definition_id.start_with?("kinetic_task_api_v2")
-    logger.info "Updating handler #{handler_definition_id}"
-    task_sdk.update_handler(handler_definition_id, {
-      "properties" => {
-        "api_location" => vars["task"]["api_v2"],
-        "api_username" => vars["task"]["service_user_username"],
-        "api_password" => vars["task"]["service_user_password"]
-      }
-    })
-  elsif handler_definition_id.start_with?("kinetic_request_ce_notification_template_send_v")
-    task_sdk.update_handler(handler_definition_id, {
-      "properties" => task_handler_configurations["kinetic_request_ce_notification_template_send"]
-    })
-  elsif handler_definition_id.start_with?("smtp_email_send")
-    task_sdk.update_handler(handler_definition_id, {
-      "properties" => task_handler_configurations["smtp_email_send"]
-    })
-  elsif handler_definition_id.start_with?("kinetic_request_ce")
-    task_sdk.update_handler(handler_definition_id, {
-      "properties" => {
-        'api_server' => vars["core"]["server"],
-        'api_username' => vars["core"]["service_user_username"],
-        'api_password' => vars["core"]["service_user_password"],
-        'space_slug' => nil,
-      }
-    })
+  else
+    if handler_definition_id.start_with?("kinetic_core_api_v1")
+      logger.info "Updating handler #{handler_definition_id}"
+      task_sdk.update_handler(handler_definition_id, {
+        "properties" => {
+          "api_location" => vars["core"]["api"],
+          "api_username" => vars["core"]["service_user_username"],
+          "api_password" => vars["core"]["service_user_password"]
+        }
+      })
+    elsif handler_definition_id.start_with?("kinetic_discussions_api_v1")
+      logger.info "Updating handler #{handler_definition_id}"
+      task_sdk.update_handler(handler_definition_id, {
+        "properties" => {
+          "api_oauth_location" => "#{vars["core"]["server"]}/app/oauth/token?grant_type=client_credentials&response_type=token",
+          "api_location" => vars["discussions"]["api"],
+          "api_username" => vars["core"]["service_user_username"],
+          "api_password" => vars["core"]["service_user_password"]
+        }
+      })
+    elsif handler_definition_id.start_with?("kinetic_task_api_v1")
+      logger.info "Updating handler #{handler_definition_id}"
+      task_sdk.update_handler(handler_definition_id, {
+        "properties" => {
+          "api_location" => vars["core"]["task_api_v1"],
+          "api_username" => vars["core"]["service_user_username"],
+          "api_password" => vars["core"]["service_user_password"],
+          "api_access_key_identifier" => nil,
+          "api_access_key_secret" => nil
+        }
+      })
+    elsif handler_definition_id.start_with?("kinetic_task_api_v2")
+      logger.info "Updating handler #{handler_definition_id}"
+      task_sdk.update_handler(handler_definition_id, {
+        "properties" => {
+          "api_location" => vars["core"]["task_api_v2"],
+          "api_username" => vars["core"]["service_user_username"],
+          "api_password" => vars["core"]["service_user_password"]
+        }
+      })
+    elsif handler_definition_id.start_with?("kinetic_request_ce_notification_template_send_v")
+      task_sdk.update_handler(handler_definition_id, {
+        "properties" => task_handler_configurations["kinetic_request_ce_notification_template_send"]
+      })
+    elsif handler_definition_id.start_with?("smtp_email_send")
+      task_sdk.update_handler(handler_definition_id, {
+        "properties" => task_handler_configurations["smtp_email_send"]
+      })
+    elsif handler_definition_id.start_with?("kinetic_request_ce")
+      task_sdk.update_handler(handler_definition_id, {
+        "properties" => {
+          'api_server' => vars["core"]["server"],
+          'api_username' => vars["core"]["service_user_username"],
+          'api_password' => vars["core"]["service_user_password"],
+          'space_slug' => nil,
+        }
+      })
+    end
   end
 end
+
+# update the engine properties
+task_sdk.update_engine({
+  "Max Threads" => "2",
+  "Sleep Delay" => "1",
+  "Trigger Query" => "'Selection Criterion'=null"
+})
 
 # ------------------------------------------------------------------------------
 # complete

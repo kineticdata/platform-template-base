@@ -1,21 +1,9 @@
 {
-  "authStrategy": {
-    "type": "Signature",
-    "properties": [
-      {
-        "name": "Key",
-        "value": "kinops-request-ce"
-      },
-      {
-        "name": "Secret",
-        "sensitive": "true"
-      }
-    ]
-  },
+  "authStrategy": {},
   "event": "Notification",
   "filter": "",
   "name": "Discussion Notification Created",
   "type": "Discussion",
-  "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/Kinetic%20Discussions/Discussion%20%3E%20Notification/Created",
+  "url": "/app/api/v1/run-tree/Kinetic%20Discussions/Discussion%20%3E%20Notification/Created",
   "attributes": null
 }

@@ -3,62 +3,48 @@
 # Format with example values:
 #
 # {
-#   "bridgehub" => {
-#     "api" => "http://localhost:8080/kinetic-bridgehub/app/api/v1",
-#     "client_api" => "http://localhost:8080/kinetic-bridgehub/acme/app/api/v1",
-#     "server" => "http://localhost:8080/kinetic-bridgehub",
-#     "space_slug" => "acme",
-#     "bridges" => {
-#       "kinetic-core" => {
-#         "bridge_path" =>  "http://localhost:8080/kinetic-bridgehub/acme/app/api/v1/bridges/kinetic-core",
-#         "slug" =>  "kinetic-core",
-#         "component_type" => "bridgehub"
-#       }
-#     }
+#   "agent" => {
+#     "component_type" => "agent",
+#     "bridge_api" => "/app/api/v1/bridges",
+#     "bridge_path" => "/app/api/v1/bridges/bridges/kinetic-core",
+#     "bridge_slug" => "kinetic-core",
+#     "filestore_api" => "/app/api/v1/filestores",
+#     "service_user_username" => "service_user_username",
+#     "service_user_password" => "secret"
 #   },
 #   "core" => {
 #     "api" => "http://localhost:8080/kinetic/app/api/v1",
-#     "proxy_url" => "http://localhost:8080/kinetic/app/components",
+#     "agent_api" => "http://localhost:8080/kinetic/foo/app/components/agent/app/api/v1",
+#     "proxy_url" => "http://localhost:8080/kinetic/foo/app/components",
 #     "server" => "http://localhost:8080/kinetic",
 #     "space_slug" => "foo",
 #     "space_name" => "Foo",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "service_user_password" => "secret",
+#     "task_api_v1" => "http://localhost:8080/kinetic/foo/app/components/task/app/api/v1",
+#     "task_api_v2" => "http://localhost:8080/kinetic/foo/app/components/task/app/api/v2"
 #   },
 #   "discussions" => {
 #     "api" => "http://localhost:8080/app/discussions/api/v1",
 #     "server" => "http://localhost:8080/app/discussions",
 #     "space_slug" => "foo"
 #   },
-#   "filehub" => {
-#     "api" => "http://localhost:8080/kinetic-filehub/app/api/v1",
-#     "server" => "http://localhost:8080/kinetic-filehub",
-#     "space_slug" => "foo",
-#     "filestores" => {
-#       "kinetic-core" => {
-#         "access_key_id" => "key",
-#         "access_key_secret" => "secret",
-#         "filestore_path" =>  "http://localhost:8080/kinetic-filehub/filestores/kinetic-core",
-#         "slug" =>  "kinetic-core"
-#       }
-#     }
-#   },
 #   "task" => {
 #     "api" => "http://localhost:8080/kinetic-task/app/api/v1",
 #     "api_v2" => "http://localhost:8080/kinetic-task/app/api/v2",
+#     "component_type" => "task",
 #     "server" => "http://localhost:8080/kinetic-task",
 #     "space_slug" => "foo",
-#     "username" => "admin",
-#     "password" => "admin_password",
 #     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "service_user_password" => "secret",
+#     "signature_secret" => "1234asdf5678jkl;"
 #   },
 #   "http_options" => {
 #     "log_level" => "info",
 #     "gateway_retry_limit" => 5,
 #     "gateway_retry_delay" => 1.0,
-#     "ssl_ca_file" => "/etc/ca.crt",
-#     "ssl_verify_mode" => "none"
+#     "ssl_ca_file" => "/app/ssl/tls.crt",
+#     "ssl_verify_mode" => "peer"
 #   }
 # }
 
@@ -139,9 +125,9 @@ logger.info "  repairing with api: #{space_sdk.api_url}"
 # ------------------------------------------------------------------------------
 
 task_sdk = KineticSdk::Task.new({
-  app_server_url: vars["task"]["server"],
-  username: vars["task"]["username"],
-  password: vars["task"]["password"],
+  app_server_url: "#{vars["core"]["proxy_url"]}/task",
+  username: vars["core"]["service_user_username"],
+  password: vars["core"]["service_user_password"],
   options: http_options.merge({ export_directory: "#{task_path}" })
 })
 

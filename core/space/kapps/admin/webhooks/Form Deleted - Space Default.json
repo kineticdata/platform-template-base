@@ -1,21 +1,9 @@
 {
-  "authStrategy": {
-    "type": "Signature",
-    "properties": [
-      {
-        "name": "Key",
-        "value": "kinops-request-ce"
-      },
-      {
-        "name": "Secret",
-        "sensitive": "true"
-      }
-    ]
-  },
+  "authStrategy": {},
   "event": "Deleted",
   "filter": "kapp('attribute:Custom Form Workflow').indexOf('Deleted') === -1",
   "name": "Form Deleted - Space Default",
   "type": "Form",
-  "url": "${space('attribute:Task Server Scheme')}://${space('attribute:Task Server Host')}/kinetic-task/app/api/v1/run-tree/${space('attribute:Task Source Name')}/Forms/Deleted",
+  "url": "/app/api/v1/run-tree/${space('attribute:Task Source Name')}/Forms/Deleted",
   "attributes": null
 }
