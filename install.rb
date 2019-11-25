@@ -8,9 +8,7 @@
 #     "bridge_api" => "/app/api/v1/bridges",
 #     "bridge_path" => "/app/api/v1/bridges/bridges/kinetic-core",
 #     "bridge_slug" => "kinetic-core",
-#     "filestore_api" => "/app/api/v1/filestores",
-#     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret"
+#     "filestore_api" => "/app/api/v1/filestores"
 #   },
 #   "core" => {
 #     "api" => "http://localhost:8080/kinetic/app/api/v1",
@@ -35,8 +33,6 @@
 #     "component_type" => "task",
 #     "server" => "http://localhost:8080/kinetic-task",
 #     "space_slug" => "foo",
-#     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret",
 #     "signature_secret" => "1234asdf5678jkl;"
 #   },
 #   "http_options" => {

@@ -21,8 +21,6 @@
 #     "component_type" => "task",
 #     "server" => "http://localhost:8080/kinetic-task",
 #     "space_slug" => "foo",
-#     "service_user_username" => "service_user_username",
-#     "service_user_password" => "secret",
 #     "signature_secret" => "1234asdf5678jkl;"
 #   },
 #   "http_options" => {
@@ -210,8 +208,8 @@ FileUtils.rm_rf Dir.glob("#{task_path}/*")
 
 task_sdk = KineticSdk::Task.new({
   app_server_url: vars["task"]["server"],
-  username: vars["task"]["service_user_username"],
-  password: vars["task"]["service_user_password"],
+  username: vars["core"]["service_user_username"],
+  password: vars["core"]["service_user_password"],
   options: http_options.merge({ export_directory: "#{task_path}" })
 })
 
